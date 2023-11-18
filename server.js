@@ -1,6 +1,6 @@
 // Importing dependencies
 const express = require('express')
-const pasth= require('path')
+const pasth= require('path')    
 const bcrypt= require('bcrypt')
 const collection = require('./src/config')
 
@@ -18,8 +18,12 @@ app.set('view engine', 'ejs')
 // Adding static file
 app.use(express.static('public'))
 
-// Settin routes
+// Home route
 app.get('/',(req,res)=>{
+    res.render('index')
+})
+// Settin routes
+app.get('/login',(req,res)=>{
     res.render('login.ejs')
 })
 
@@ -28,15 +32,16 @@ app.get('/signup', (req,res)=>{
 })
 
 // Sign up user
-app.post('/', async(req,res)=>{
+app.post('/signup', async(req,res)=>{
+    // Getting the data
     const data = {
         name: req.body.username,
         password: req.body.password
     }
-
+// Check if user exists
 const existingUser = await collection.findOne({name: data.name});
 if(existingUser) {
-    res.send('User alredy exists try a different User name');
+    console.log('User alredy exists try a different User name');
 }else{
     // Hashing password
     const saltRound = 10 //Number of saltrounds for bcrypt
@@ -46,7 +51,7 @@ if(existingUser) {
 
     const userdata = await collection.insertMany(data);
     console.log(userdata);
-    res.render('home')
+    res.redirect('/')
 }
 
 })
@@ -55,19 +60,20 @@ if(existingUser) {
 // log in user
 app.post("/login", async(req,res)=>{
     try{
+        // Checking if username is valid
         const check = await collection.findOne({name: req.body.username});
         if(!check) {
-            res.send("User name not found")
+            console.log("User name not found")
         }
         // Comparing hash password in db with current user input
         const isPasswordMatch= await bcrypt.compare(req.body.password, check.password)
         if(isPasswordMatch){
-            res.render('home')
+            return res.redirect('/')
         }else{
-            req.send("wrong password")
+            console.log();("wrong password")
         }
     }catch{
-        res.send("wrong Details")
+        console.log();("wrong Details")
     }
 })
 
